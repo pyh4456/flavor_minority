@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=EUC-KR"
     pageEncoding="EUC-KR"%>
-<%@ page import = "jsp.RestaurantDAO" %>
+<%@ page import = "jsp.RestaurantDAO" %> 
+<%@ page import = "jsp.MemberDAO" %> 
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,18 +21,20 @@
 	<%
 		float latitude = Float.parseFloat(request.getParameter("latitude"));
 		float longitude = Float.parseFloat(request.getParameter("longitude"));
-		
+		String id = request.getParameter("identification");
 		RestaurantDAO dao = RestaurantDAO.getInstance();
+		MemberDAO memberdao = MemberDAO.getInstance();
+		String avoidence = memberdao.getAvoidence(id);
 		int number = dao.findRestaurants(latitude, longitude);
 		
 	%>
-
+	
 	<div id="map" style="width:100%;height:100%;"></div>
 
 	<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=0cc283eba2401a8d3c5fd6c79744fad5"></script>
 	<script type="text/javascript">
-	var map
 	
+	var map
 	var name;
 	var openedWindow = null, selectedMarker = null;
 	function makeMap(latitude, longitude) {
@@ -67,7 +70,6 @@
 		});
 		kakao.maps.event.addListener(marker, 'click', function() {
 	        // 클릭된 마커가 없고, click 마커가 클릭된 마커가 아니면
-	        // 마커의 이미지를 클릭 이미지로 변경합니다
 	        if (!selectedMarker || selectedMarker !== marker) {
 	        	// 이미 열려있는 infowindow가 있으면 닫는다.
 	        	if(openedWindow){
@@ -82,15 +84,20 @@
 	    });
 		
 		var numberOfRestaurants = <%=number%>;
-		
+		var menu;
 		var i;
+		var avoid = false;
 		<%
 			int num = 0;
-			for(num = 0; num< number; num++){%>
+			for(num = 0; num< number; num++){
+			boolean avoid;
+			avoid = dao.isSafe(avoidence, num);
+			%>
+			avoid = <%=avoid%>;
 			latitude = <%=dao.getLatitude(num)%>;
 			longitude = <%=dao.getLongitude(num)%>;
 			name = "<%=dao.getName(num)%>";
-			loadRestaurant(latitude,longitude,name);
+			loadRestaurant(latitude,longitude,avoid, name);
 			<%
 			}
 			dao.restaurants.clear();
@@ -100,9 +107,16 @@
 	function sendMessage(msg){
 		window.android.setMessage(msg);
 	}
-	function loadRestaurant(lati, longi, name){
-
-		var icon = 'http://the4456.iptime.org:8080/jsp/marker/Marker_Inside_Chartreuse.png', // 마커이미지의 주소입니다    
+	function loadRestaurant(lati, longi, avoid, name){
+		var icon;
+		
+		if(avoid){
+			 icon  = 'http://the4456.iptime.org:8080/jsp/marker/Marker_Inside_Pink.png'; // 마커이미지의 주소입니다 
+		}else{
+			 icon  = 'http://the4456.iptime.org:8080/jsp/marker/Marker_Inside_Chartreuse.png'; // 마커이미지의 주소입니다 
+		}
+		
+		
 		imageSize = new kakao.maps.Size(50, 50), // 마커이미지의 크기입니다
 	    imageOption = {offset: new kakao.maps.Point(27, 69)}; // 마커이미지의 옵션입니다. 마커의 좌표와 일치시킬 이미지 안에서의 좌표를 설정합니다.
 	    var markerImage = new kakao.maps.MarkerImage(icon, imageSize, imageOption)
@@ -140,8 +154,10 @@
 	         // 클릭된 마커를 현재 클릭된 마커 객체로 설정합니다
 		        selectedMarker = marker;
 	        }else{
-	        	var urlString = encodeURI("app://"+name);
-	        	window.location.href = urlString;
+	        	
+	        	
+	        	document.getElementsByName("restaurant")[0].value = name;
+	      	  	document.getElementById("restaurantInfo").submit();
 	        }
 	        
 	    });
@@ -153,7 +169,10 @@
 	
 	
 	</script>
-	
+	<form id="restaurantInfo" method="post" action="markerEventProcess.jsp">
+    	<input type="hidden" name="restaurant" />
+   	</form>
+  
 </body>
 
 </html>

@@ -1,41 +1,15 @@
 package com.example.myapplication;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -43,7 +17,7 @@ public class MainActivity extends AppCompatActivity{
     private WebSettings mWebSettings; //웹뷰세팅
     private com.example.myapplication.GpsTracker gpsTracker;
     private Context mContext;
-
+    private int backButtonPressed = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,7 +43,7 @@ public class MainActivity extends AppCompatActivity{
         mWebView.setWebViewClient(new WebViewClientClass());
 
     }
-    class WebViewClientClass extends WebViewClient{
+    private class WebViewClientClass extends WebViewClient{
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url){
             if(url.startsWith("app://")){
@@ -85,7 +59,15 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     }
-
+    @Override
+    public void onBackPressed() {
+        if(backButtonPressed == 1){
+            super.onBackPressed();
+        }else{
+            Toast.makeText(MainActivity.this, "앱을 종료하려면 뒤로가기버튼을 한번 더 누르세요", Toast.LENGTH_SHORT).show();
+            backButtonPressed++;
+        }
+    }
 
 }
 

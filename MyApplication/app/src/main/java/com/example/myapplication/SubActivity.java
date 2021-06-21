@@ -36,11 +36,12 @@ public class SubActivity extends AppCompatActivity {
     private WebView mWebView; // 웹뷰 선언
     private WebSettings mWebSettings; //웹뷰세팅
     private com.example.myapplication.GpsTracker gpsTracker;
-    public String ID; //MainActivity에서 넘어온 토큰을 저장할 변수
+    private String token;//MainActivity에서 넘어온 토큰을 저장할 변수
+    private String ID, avoidence;
     private Context mContext;
     private double latitude;
     private double longitude;
-
+    private int backButtonPressed = 0;
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
     private static final int PERMISSIONS_REQUEST_CODE = 100;
     String[] REQUIRED_PERMISSIONS  = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
@@ -51,16 +52,18 @@ public class SubActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();//MainActivity에서 넘어온 Intent
-        ID =intent.getStringExtra("token"); //Intent의 토큰값
-        ID = ID.substring(6);//Id만 잘라낸것.
+        token =intent.getStringExtra("token").substring(6); //Intent의 토큰값
+        String split[] = token.split(",");
+        ID = split[0];
+        avoidence = split[1];
 
         setContentView(R.layout.subactivity_main);
         mContext = this.getApplicationContext();
         gpsTracker = new GpsTracker(SubActivity.this);
 
+
         latitude = gpsTracker.getLatitude();
         longitude = gpsTracker.getLongitude();
-        final TextView textview_address = (TextView)findViewById(R.id.textview);
 
         if (!checkLocationServicesStatus()) {
             showDialogForLocationServiceSetting();
@@ -70,22 +73,14 @@ public class SubActivity extends AppCompatActivity {
 
         String address = getCurrentAddress(latitude, longitude);
 
-        textview_address.setText(address);
-
-        Toast.makeText(SubActivity.this, "현재위치 \n위도 " + latitude + "\n경도 " + longitude, Toast.LENGTH_LONG).show();
         String location = latitude+","+longitude;
 
         mWebView = findViewById(R.id.webView);
         mWebView.setWebViewClient(new WebViewClient()); // 클릭시 새창 안뜨게
         mWebSettings = mWebView.getSettings(); //세부 세팅 등록
         mWebView.getSettings().setJavaScriptEnabled(true); // 웹페이지 자바스크립트 허용 여부
-
         mWebSettings.setSupportMultipleWindows(false); // 새창 띄우기 허용 여부
         mWebSettings.setJavaScriptCanOpenWindowsAutomatically(true); // 자바스크립트 새창 띄우기(멀티뷰) 허용 여부
-        //mWebSettings.setLoadWithOverviewMode(true); // 메타태그 허용 여부
-        //7mWebSettings.setUseWideViewPort(true); // 화면 사이즈 맞추기 허용 여부
-        //mWebSettings.setSupportZoom(false); // 화면 줌 허용 여부
-        //mWebSettings.setBuiltInZoomControls(false); // 화면 확대 축소 허용 여부
         mWebSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN); // 컨텐츠 사이즈 맞추기
         mWebSettings.setCacheMode(WebSettings.LOAD_NO_CACHE); // 브라우저 캐시 허용 여부
         mWebSettings.setDomStorageEnabled(true); // 로컬저장소 허용 여부
@@ -94,11 +89,22 @@ public class SubActivity extends AppCompatActivity {
         mWebView.setWebViewClient(new WebViewClientClass());
 
 
-        Button loginButton = (Button) findViewById(R.id.logout);
-        loginButton.setOnClickListener(new View.OnClickListener() {
+        Button logoutButton = (Button) findViewById(R.id.logout);
+        logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        Button settingButton = (Button) findViewById(R.id.btn_open);
+        settingButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                Intent intent = new Intent(getApplicationContext(), SubActivity2.class);
+                intent.putExtra("token", ID+","+avoidence);
                 startActivity(intent);
                 finish();
             }
@@ -108,14 +114,16 @@ public class SubActivity extends AppCompatActivity {
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
-            mWebView.loadUrl("javascript:transmit("+latitude+","+longitude+")");
+            mWebView.loadUrl("javascript:transmit("+latitude+","+longitude+", '"+ID+"')");
         }
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url){
             if(url.startsWith("app://")){
+
                 Intent intent = new Intent(mContext.getApplicationContext(), MenuActivity.class);
-                intent.putExtra("restaurant", url);
+                intent.putExtra("restaurant", url+","+ID+","+avoidence);
                 startActivity(intent);
+                finish();
                 return true;
             }
             else{
@@ -124,7 +132,15 @@ public class SubActivity extends AppCompatActivity {
             }
         }
     }
-    
+    @Override
+    public void onBackPressed() {
+        if(backButtonPressed == 1){
+           super.onBackPressed();
+        }else{
+            Toast.makeText(SubActivity.this, "앱을 종료하려면 뒤로가기버튼을 한번 더 누르세요", Toast.LENGTH_SHORT).show();
+            backButtonPressed++;
+        }
+    }
     
     @Override
     public void onRequestPermissionsResult(int permsRequestCode,

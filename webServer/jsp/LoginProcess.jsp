@@ -9,6 +9,7 @@
 <title>login process</title>
 </head>
 <body>
+
 	<%
         // 인코딩 처리
         request.setCharacterEncoding("euc-kr"); 
@@ -20,13 +21,14 @@
         // DB에서 아이디, 비밀번호 확인
         MemberDAO dao = MemberDAO.getInstance();
         int check = dao.loginCheck(id, pw);
-        
+        String avoidence = dao.getAvoidence(id);
         // URL 및 로그인관련 전달 메시지
         String msg = "";
-        
+
+	
         if(check == 1)    // 로그인 성공
         { 
-            msg = "app://"+id;
+            msg = "app://"+id+","+avoidence;
         }
         else if(check == 0) // 비밀번호가 틀릴경우
         {
