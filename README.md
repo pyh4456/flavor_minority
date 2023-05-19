@@ -1,7 +1,7 @@
 # 맛소수자(flavor_minority)
  
 ### 1. 프로젝트 소개 
-맛소수자(flavor_minority)는 편식하는 사람들을 위해 근처의 가게에서 사용하는 재료를 알려주는 어플리케이션입니다.
+맛소수자(flavor_minority)는 사용자 주변의 음식점에서 사용자가 기피 하는 재료를 사용하는지 알려주는 서비스다.
 
 ### 2. 시스템 구성도
  ![image](https://github.com/pyh4456/flavor_minority/assets/62279820/0917e841-559b-4b8d-b24f-c6129ce6d0ce)
